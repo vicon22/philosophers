@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/11 15:13:20 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/15 19:01:47 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/15 22:05:21 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <pthread.h>
-#include <sys/time.h>
-#include <stdio.h>
+# include <sys/time.h>
+# include <stdio.h>
 # include <time.h>
 
 typedef struct s_list
@@ -29,17 +29,19 @@ typedef struct s_list
 	int	time_to_sleep;
 	int	num_times_each_philo_must_eat;
 	struct timeval	time;
+	int				some_die;
 }	t_list;
 
 typedef struct f_list
 {
 	int				number_current_philo;
-	pthread_mutex_t	left_forks;
-	pthread_mutex_t	right_forks;
+	pthread_mutex_t	*left_forks;
+	pthread_mutex_t	*right_forks;
 	pthread_t		*filo;
 	t_list			*info;
 	struct f_list	*next;
 	struct timeval	time_of_last_meal;
+	int				number_of_meal;
 }	t_filo_list;
 
 void	*pholi_life(void *vargp);

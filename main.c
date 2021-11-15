@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/08 15:04:43 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/15 21:18:11 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/15 22:27:58 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@ void	ft_some_philo_die(t_filo_list *philos)
 
 	gettimeofday(&current_time, NULL);
 	printf("%d %d died\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+	philos->info->some_die = 1;
+	//pthread_mutex_unlock(philos->left_forks);
+	//pthread_mutex_unlock(philos->right_forks);
 }
 
 void	*pholi_life(void *vargs)
@@ -33,31 +36,70 @@ void	*pholi_life(void *vargs)
 		philos->info->time = current_time;
 	philos->time_of_last_meal = current_time;
 	i = 0;
-	pthread_mutex_init(&philos->left_forks, NULL);
-	pthread_mutex_init(&philos->right_forks, NULL);
-	while (i++ < 5)
+	//pthread_mutex_init(philos->left_forks, NULL);
+	//pthread_mutex_init(philos->right_forks, NULL);
+	philos->number_of_meal = 0;
+	while (i++ < 10)
 	{
 		gettimeofday(&current_time, NULL);
 		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		{
+			printf("@@@\n");
 			ft_some_philo_die(philos);
-		pthread_mutex_lock(&philos->left_forks);
-		pthread_mutex_lock(&philos->right_forks);
+		}
+		if (philos->info->some_die == 1)
+		{
+			printf("-@@@\n");
+			return (NULL);
+		}
+		pthread_mutex_lock(philos->left_forks);
+		pthread_mutex_lock(philos->right_forks);
+		gettimeofday(&current_time, NULL);
+		if (philos->info->some_die == 1)
+		{
+			//printf("-@@@\n");
+			return (NULL);
+		}
 		printf("%d %d is eating\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
 		usleep(philos->info->time_to_eat);
-		pthread_mutex_unlock(&philos->left_forks);
-		pthread_mutex_unlock(&philos->right_forks);
+		pthread_mutex_unlock(philos->left_forks);
+		pthread_mutex_unlock(philos->right_forks);
 		gettimeofday(&current_time, NULL);
 		philos->time_of_last_meal = current_time;
+		philos->number_of_meal +=1;
+		//printf("philos->info->num_times_each_philo_must_eat:%d\n", philos->info->num_times_each_philo_must_eat);
+		//printf("%d philos->number_of_meal:%d\n", philos->number_current_philo, philos->number_of_meal);
+		if (philos->info->num_times_each_philo_must_eat > 0 && philos->number_of_meal >= philos->info->num_times_each_philo_must_eat)
+		{
+			printf("---\n");
+			break ;
+		}
 
 		gettimeofday(&current_time, NULL);
 		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		{
+			printf("$$$\n");
 			ft_some_philo_die(philos);
+		}
+		if (philos->info->some_die == 1)
+		{
+			printf("-$$$\n");
+			return (NULL);
+		}
 		printf("%d %d is sleeping\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
 		usleep(philos->info->time_to_sleep);
 
 		gettimeofday(&current_time, NULL);
 		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		{
+			printf("@@@\n");
 			ft_some_philo_die(philos);
+		}
+		if (philos->info->some_die == 1)
+		{
+			printf("-@@@\n");
+			return (NULL);
+		}
 		printf("%d %d is thinking\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
 	}
 	return NULL;
@@ -76,6 +118,8 @@ t_list	*ft_initialize(int argc, char **argv)
 	arg->time_to_sleep = ft_atoi(argv[4]);
 	if (argc == 6)
 		arg->num_times_each_philo_must_eat = ft_atoi(argv[5]);
+	else
+		arg->num_times_each_philo_must_eat = -1;
 //	printf("number_philo:%d\n", arg->number_philo);
 //	printf("time_to_die:%d\n", arg->time_to_die);
 //	printf("time_to_eat:%d\n", arg->time_to_eat);
@@ -97,18 +141,18 @@ t_filo_list	*create_philos(t_list *arg, pthread_mutex_t	**forks)
 		current = ftLstnewFilo(i, arg);
 		if (i == 1)
 		{
-			current->left_forks = *forks[0];
-			current->right_forks = *forks[arg->number_philo - 1];
+			current->left_forks = forks[0];
+			current->right_forks = forks[arg->number_philo - 1];
 		}
 		else if (i == arg->number_philo)
 		{
-			current->left_forks = *forks[arg->number_philo - 1];
-			current->right_forks = *forks[0];
+			current->left_forks = forks[arg->number_philo - 1];
+			current->right_forks = forks[0];
 		}
 		else
 		{
-			current->left_forks = *forks[i - 1];
-			current->right_forks = *forks[i - 2];
+			current->left_forks = forks[i - 1];
+			current->right_forks = forks[i - 2];
 		}
 		ft_lstadd_back(&philos, current);
 		i++;
@@ -136,6 +180,7 @@ pthread_mutex_t	**create_forks(t_list *arg)
 	while (i < arg->number_philo)
 	{
 		mutex_s[i] = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+		//printf("mutex_s[%d]:%p\n", i, mutex_s[i]);
 		pthread_mutex_init(mutex_s[i], NULL);
 		i++;
 	}
