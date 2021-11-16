@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/11 15:13:20 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/15 22:05:21 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/16 14:50:44 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ typedef struct s_list
 	int	num_times_each_philo_must_eat;
 	struct timeval	time;
 	int				some_die;
+	pthread_mutex_t	take_both_fork;
 }	t_list;
 
 typedef struct f_list

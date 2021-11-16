@@ -6,21 +6,22 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/08 15:04:43 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/15 22:27:58 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/16 14:47:06 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	ft_some_philo_die(t_filo_list *philos)
+void	ft_some_philo_die(t_filo_list *philos, struct timeval current_time)
 {
-	struct timeval	current_time;
+	//struct timeval	current_time;
 
-	gettimeofday(&current_time, NULL);
-	printf("%d %d died\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+	//gettimeofday(&current_time, NULL);
+	if (philos->info->some_die != 1)
+		printf("%d %d died\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
 	philos->info->some_die = 1;
-	//pthread_mutex_unlock(philos->left_forks);
-	//pthread_mutex_unlock(philos->right_forks);
+	pthread_mutex_unlock(philos->left_forks);
+	pthread_mutex_unlock(philos->right_forks);
 }
 
 void	*pholi_life(void *vargs)
@@ -29,46 +30,63 @@ void	*pholi_life(void *vargs)
 	static int		j = 0;
 	int				i = 0;
 	struct timeval	current_time;
+	//pthread_mutex_t	take_both_fork;
 
 	philos = (t_filo_list *)vargs;
 	gettimeofday(&current_time, NULL);
 	if (j++ == 0)
+	{
+		pthread_mutex_init(&philos->info->take_both_fork, NULL);
 		philos->info->time = current_time;
+	}
 	philos->time_of_last_meal = current_time;
 	i = 0;
-	//pthread_mutex_init(philos->left_forks, NULL);
-	//pthread_mutex_init(philos->right_forks, NULL);
 	philos->number_of_meal = 0;
-	while (i++ < 10)
+	while (1)
 	{
 		gettimeofday(&current_time, NULL);
-		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		if (philos->info->some_die != 1 && current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
 		{
-			printf("@@@\n");
-			ft_some_philo_die(philos);
+			printf("1:%d\n", philos->number_current_philo);
+			ft_some_philo_die(philos, current_time);
+			return (NULL);
 		}
 		if (philos->info->some_die == 1)
 		{
-			printf("-@@@\n");
+			printf("-1:%d\n", philos->number_current_philo);
 			return (NULL);
 		}
+		pthread_mutex_lock(&philos->info->take_both_fork);
+		//printf("take_both_fork - %p\n", &philos->info->take_both_fork);
+		//printf("%d - take_both_fork:%d\n", philos->number_current_philo, pthread_mutex_lock(&philos->info->take_both_fork));
+		//printf("%d - left:%d\n", philos->number_current_philo, pthread_mutex_lock(philos->left_forks));
+		//printf("%d - right:%d\n", philos->number_current_philo, pthread_mutex_lock(philos->right_forks));
 		pthread_mutex_lock(philos->left_forks);
 		pthread_mutex_lock(philos->right_forks);
 		gettimeofday(&current_time, NULL);
-		if (philos->info->some_die == 1)
-		{
-			//printf("-@@@\n");
-			return (NULL);
-		}
-		printf("%d %d is eating\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
-		usleep(philos->info->time_to_eat);
+		if (philos->info->some_die != 1)
+			printf("%d %d has taken a fork\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+//		pthread_mutex_lock(philos->left_forks);
+//		pthread_mutex_lock(philos->right_forks);
+		pthread_mutex_unlock(&philos->info->take_both_fork);
+		gettimeofday(&current_time, NULL);
 		pthread_mutex_unlock(philos->left_forks);
 		pthread_mutex_unlock(philos->right_forks);
+		if (philos->info->some_die == 1)
+		{
+			printf("-2:%d\n", philos->number_current_philo);
+			return (NULL);
+		}
+		if (philos->info->some_die != 1)
+		{
+			printf("%d %d is eating\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+			usleep(philos->info->time_to_eat);
+		}
 		gettimeofday(&current_time, NULL);
 		philos->time_of_last_meal = current_time;
 		philos->number_of_meal +=1;
-		//printf("philos->info->num_times_each_philo_must_eat:%d\n", philos->info->num_times_each_philo_must_eat);
-		//printf("%d philos->number_of_meal:%d\n", philos->number_current_philo, philos->number_of_meal);
+		printf("philos->info->num_times_each_philo_must_eat:%d\n", philos->info->num_times_each_philo_must_eat);
+		printf("%d philos->number_of_meal:%d\n", philos->number_current_philo, philos->number_of_meal);
 		if (philos->info->num_times_each_philo_must_eat > 0 && philos->number_of_meal >= philos->info->num_times_each_philo_must_eat)
 		{
 			printf("---\n");
@@ -76,31 +94,37 @@ void	*pholi_life(void *vargs)
 		}
 
 		gettimeofday(&current_time, NULL);
-		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		if (philos->info->some_die != 1 && current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
 		{
-			printf("$$$\n");
-			ft_some_philo_die(philos);
+			printf("3:%d\n", philos->number_current_philo);
+			ft_some_philo_die(philos, current_time);
+			return (NULL);
 		}
 		if (philos->info->some_die == 1)
 		{
-			printf("-$$$\n");
+			printf("-3:%d\n", philos->number_current_philo);
 			return (NULL);
 		}
-		printf("%d %d is sleeping\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
-		usleep(philos->info->time_to_sleep);
+		if (philos->info->some_die != 1)
+		{
+			printf("%d %d is sleeping\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+			usleep(philos->info->time_to_sleep);
+		}
 
 		gettimeofday(&current_time, NULL);
-		if (current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
+		if (philos->info->some_die != 1 && current_time.tv_usec - philos->time_of_last_meal.tv_usec > philos->info->time_to_die)
 		{
-			printf("@@@\n");
-			ft_some_philo_die(philos);
+			printf("4:%d\n", philos->number_current_philo);
+			ft_some_philo_die(philos, current_time);
+			return (NULL);
 		}
 		if (philos->info->some_die == 1)
 		{
-			printf("-@@@\n");
+			printf("-4:%d\n", philos->number_current_philo);
 			return (NULL);
 		}
-		printf("%d %d is thinking\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
+		if (philos->info->some_die != 1)
+			printf("%d %d is thinking\n", current_time.tv_usec - philos->info->time.tv_usec, philos->number_current_philo);
 	}
 	return NULL;
 }
@@ -111,7 +135,7 @@ t_list	*ft_initialize(int argc, char **argv)
 
 	arg = (t_list *)malloc(sizeof(t_list *) * 1);
 	if (NULL == arg)
-		exit (1);
+		exit (1); //// удалить нахер
 	arg->number_philo = ft_atoi(argv[1]);
 	arg->time_to_die = ft_atoi(argv[2]);
 	arg->time_to_eat = ft_atoi(argv[3]);
@@ -124,7 +148,8 @@ t_list	*ft_initialize(int argc, char **argv)
 //	printf("time_to_die:%d\n", arg->time_to_die);
 //	printf("time_to_eat:%d\n", arg->time_to_eat);
 //	printf("time_to_sleep:%d\n", arg->time_to_sleep);
-//	printf("num_times_each_philo_must_eat:%d\n", arg->num_times_each_philo_must_eat);
+	printf("                             num_times_each_philo_must_eat:%d\n", arg->num_times_each_philo_must_eat);
+	printf("                             number_philo:%d\n", arg->number_philo);
 	return (arg);
 }
 
@@ -170,14 +195,14 @@ int	ft_arg_check(int argc)
 	return (0);
 }
 
-pthread_mutex_t	**create_forks(t_list *arg)
+pthread_mutex_t	**create_forks(int number_philo)
 {
 	pthread_mutex_t	**mutex_s;
 	int				i;
 
 	i = 0;
-	mutex_s = (pthread_mutex_t **)malloc(sizeof(pthread_mutex_t *) * arg->number_philo);
-	while (i < arg->number_philo)
+	mutex_s = (pthread_mutex_t **)malloc(sizeof(pthread_mutex_t *) * number_philo);
+	while (i < number_philo)
 	{
 		mutex_s[i] = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
 		//printf("mutex_s[%d]:%p\n", i, mutex_s[i]);
@@ -201,7 +226,9 @@ int	main(int argc, char **argv)
 		return (1);
 	arg = ft_initialize(argc, argv);
 	gettimeofday(&current_time_2, NULL);
-	forks = create_forks(arg);
+	//printf("2                             num_times_each_philo_must_eat:%d\n", arg->num_times_each_philo_must_eat);
+	forks = create_forks(arg->number_philo);
+	printf("2                             num_times_each_philo_must_eat:%d\n", arg->num_times_each_philo_must_eat);
 	philos = create_philos(arg, forks);
 	saver = philos;
 	for (i = 0; i < arg->number_philo; i++)
@@ -209,7 +236,7 @@ int	main(int argc, char **argv)
 		//printf("Before Thread\n");
 		pthread_create(saver->filo, NULL, pholi_life, saver);
 		saver = saver->next;
-		usleep(50);
+		//usleep(50);
 	}
 	saver = philos;
 	for (i = 0; i < arg->number_philo; i++)
