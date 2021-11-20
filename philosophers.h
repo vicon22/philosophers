@@ -53,6 +53,7 @@ int	ft_timestamp(void);
 int	ft_observer(t_filo_list *philos);
 void	ft_some_philo_die(t_filo_list *philos);
 void	ft_destroy(t_filo_list	*philos);
+void	ft_sleep(int milliseconds);
 
 int	ft_atoi(const char *str);
 #endif

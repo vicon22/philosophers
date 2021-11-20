@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/08 15:04:43 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/20 14:24:40 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/20 18:01:02 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,8 @@ void	*pholi_life(void *vargs)
 		printf("%d %d is eating\n", ft_timestamp() - philos->info->time, philos->number_current_philo);
 		pthread_mutex_unlock(&philos->info->print);
 
-		usleep(philos->info->time_to_eat);
+		//usleep(philos->info->time_to_eat);
+		ft_sleep(philos->info->time_to_eat);
 		pthread_mutex_unlock(philos->left_forks);
 		pthread_mutex_unlock(philos->right_forks);
 		philos->time_of_last_meal = ft_timestamp();
@@ -82,7 +83,8 @@ void	*pholi_life(void *vargs)
 		printf("%d %d is sleeping\n", ft_timestamp() - philos->info->time, philos->number_current_philo);
 		pthread_mutex_unlock(&philos->info->print);
 
-		usleep(philos->info->time_to_sleep);
+		//usleep(philos->info->time_to_sleep);
+		ft_sleep(philos->info->time_to_sleep);
 
 		pthread_mutex_lock(&philos->info->print);
 		printf("%d %d is thinking\n", ft_timestamp() - philos->info->time, philos->number_current_philo);
@@ -100,8 +102,8 @@ t_list	*ft_initialize(int argc, char **argv)
 		return (NULL);
 	arg->number_philo = ft_atoi(argv[1]);
 	//arg->time_to_die = ft_atoi(argv[2]) * 1000;
-	arg->time_to_eat = ft_atoi(argv[3]) * 1000;
-	arg->time_to_sleep = ft_atoi(argv[4]) * 1000;
+	arg->time_to_eat = ft_atoi(argv[3]);
+	arg->time_to_sleep = ft_atoi(argv[4]);
 	arg->time_to_die = ft_atoi(argv[2]);
 //	arg->time_to_eat = ft_atoi(argv[3]);
 //	arg->time_to_sleep = ft_atoi(argv[4]);
@@ -171,6 +173,39 @@ pthread_mutex_t	**create_forks(int number_philo)
 	return (mutex_s);
 }
 
+void	ft_start_algoritm(t_filo_list *philos)
+{
+	int				i;
+	t_filo_list		*saver;
+	int	number_philo;
+
+	i = 0;
+	saver = philos;
+	number_philo = philos->info->number_philo;
+	while (i < number_philo)
+	{
+		if (i % 2 == 0)
+		{
+			pthread_create(saver->filo, NULL, pholi_life, saver);
+			usleep(50);
+		}
+		saver = saver->next;
+		i++;
+	}
+	i = 0;
+	saver = philos;
+	while (i < number_philo)
+	{
+		if (i % 2 == 1)
+		{
+			pthread_create(saver->filo, NULL, pholi_life, saver);
+			usleep(50);
+		}
+		saver = saver->next;
+		i++;
+	}
+}
+
 int	main(int argc, char **argv)
 {
 	t_list			*arg;
@@ -188,17 +223,15 @@ int	main(int argc, char **argv)
 	philos = create_philos(arg, forks);
 	saver = philos;
 	i = 0;
-	while (i < arg->number_philo)
-	{
-		//printf("Before Thread\n");
-		pthread_create(saver->filo, NULL, pholi_life, saver);
-		saver = saver->next;
-		usleep(50);
-		i++;
-	}
-	//printf("---\n");
-	saver = philos;
-	i = 0;
+//	while (i < arg->number_philo)
+//	{
+//		//printf("Before Thread\n");
+//		pthread_create(saver->filo, NULL, pholi_life, saver);
+//		saver = saver->next;
+//		usleep(50);
+//		i++;
+//	}
+	ft_start_algoritm(philos);
 	while (1)
 	{
 		if (ft_observer(philos) == 1)
@@ -206,13 +239,6 @@ int	main(int argc, char **argv)
 			ft_destroy(philos);
 			return (0);
 		}
-	}
-	while (i < arg->number_philo)
-	{
-		pthread_join(*saver->filo, NULL);
-		saver = saver->next;
-		//printf("After Thread\n");
-		i++;
 	}
 	return (0);
 }
