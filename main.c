@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/08 15:04:43 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/19 16:41:40 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/20 14:24:40 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,12 @@ void	ft_some_philo_die(t_filo_list *philos)
 
 	//gettimeofday(&current_time, NULL);
 	if (philos->info->some_die != 1)
+	{
+		pthread_mutex_lock(&philos->info->print);
+		usleep(1000);
 		printf("\x1b[31m" "%d %d died" "\x1b[0m" "\n", ft_timestamp() - philos->info->time, philos->number_current_philo);
+		//pthread_mutex_unlock(&philos->info->print);
+	}
 	philos->info->some_die = 1;
 	pthread_mutex_unlock(philos->left_forks);
 	pthread_mutex_unlock(philos->right_forks);
@@ -37,7 +42,7 @@ void	*pholi_life(void *vargs)
 		pthread_mutex_init(&philos->info->print, NULL);
 		philos->info->time = ft_timestamp();
 	}
-	philos->time_of_last_meal = philos->info->time;
+	philos->time_of_last_meal = ft_timestamp();
 	philos->number_of_meal = 0;
 	while (philos->number_of_meal != philos->info->num_times_each_philo_must_eat)
 	{
@@ -194,7 +199,14 @@ int	main(int argc, char **argv)
 	//printf("---\n");
 	saver = philos;
 	i = 0;
-	ft_observer(philos);
+	while (1)
+	{
+		if (ft_observer(philos) == 1)
+		{
+			ft_destroy(philos);
+			return (0);
+		}
+	}
 	while (i < arg->number_philo)
 	{
 		pthread_join(*saver->filo, NULL);

@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/11 15:13:20 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/19 16:29:39 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/20 14:19:48 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ typedef struct f_list
 	pthread_t		*filo;
 	t_list			*info;
 	struct f_list	*next;
-	int	time_of_last_meal;
+	int				time_of_last_meal;
 	int				number_of_meal;
 }	t_filo_list;
 
@@ -50,8 +50,9 @@ void	*pholi_life(void *vargp);
 t_filo_list	*ftLstnewFilo(int number_current_philo, t_list *info);
 void		ft_lstadd_back(t_filo_list **lst, t_filo_list *new);
 int	ft_timestamp(void);
-void	ft_observer(t_filo_list *philos);
+int	ft_observer(t_filo_list *philos);
 void	ft_some_philo_die(t_filo_list *philos);
+void	ft_destroy(t_filo_list	*philos);
 
 int	ft_atoi(const char *str);
 #endif
