@@ -20,6 +20,7 @@
 # include <sys/time.h>
 # include <stdio.h>
 # include <time.h>
+# include <semaphore.h>
 
 typedef struct s_list
 {
