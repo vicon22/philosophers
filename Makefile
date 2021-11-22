@@ -6,18 +6,17 @@
 #    By: eveiled <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/10/12 12:45:23 by eveiled           #+#    #+#              #
-#   Updated: 2021/11/11 14:02:43 by eveiled          ###   ########.fr       # #
+#   Updated: 2021/11/22 20:07:16 by eveiled          ###   ########.fr       # #
 #                                                                              #
 # **************************************************************************** #
 
-NAME		= so_long
+NAME		= philo
 #
-SOURSE = utils_1.c utils_2.c get_next_line.c get_next_line_utils.c\
-		messages.c main.c ft_putnbr_fd.c ft_putstr_fd.c utils_3.c
+SOURSE = main.c create_all.c destroy.c\
+		ft_atoi.c lsts.c philo_life.c utils_1.c
 # 
 CFLAGS		= -Wall -Werror -Wextra -I $(HEADER)
-HEADER	= so_long.h
-HEADER_2 = get_next_line.h
+HEADER	= philosophers.h
 OBJ = $(SOURSE:%.c=%.o)
 CC = gcc
 #
@@ -25,8 +24,8 @@ CC = gcc
 #
 all : $(NAME)
 #
-$(NAME) : $(OBJ) $(HEADER) $(HEADER_2)
-	$(CC) $(CFLAGS) -L /usr/local/lib -lmlx -framework OpenGL -framework AppKit $(SOURSE) -o $(NAME)
+$(NAME) : $(OBJ) $(HEADER)
+	$(CC) $(CFLAGS) $(SOURSE) -o $(NAME)
 #
 %.o : %.c $(HEADER)
 	$(CC) $(CFLAGS) -c $< -o $@

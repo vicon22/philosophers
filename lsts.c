@@ -6,13 +6,13 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/15 14:45:37 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/15 17:54:08 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/22 19:49:24 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-t_filo_list	*ftLstnewFilo(int number_current_philo, t_list *info)
+t_filo_list	*ft_lstnew_filo(int number_current_philo, t_list *info)
 {
 	t_filo_list	*new;
 
@@ -21,10 +21,6 @@ t_filo_list	*ftLstnewFilo(int number_current_philo, t_list *info)
 		return (NULL);
 	new->number_current_philo = number_current_philo;
 	new->filo = (pthread_t *)malloc(sizeof(pthread_t));
-//	printf("=====\n");
-//	printf("new->number_philo:%d\n", new->number_current_philo);
-//	printf("new->filo:%p\n", new->filo);
-//	printf("=====\n");
 	if (NULL == new->filo)
 	{
 		free(new);

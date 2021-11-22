@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/19 14:43:45 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/20 17:55:40 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/22 19:57:39 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,31 +27,25 @@ int	ft_observer(t_filo_list *philos)
 	t_filo_list		*saver;
 	int				time_to_die;
 	int				n_t_e_p_m_e;
-	static	int		j = 0;
 
 	saver = philos;
 	time_to_die = saver->info->time_to_die;
-	//printf("time_to_die:%d\n", time_to_die);
 	n_t_e_p_m_e = philos->info->num_times_each_philo_must_eat;
 	while (saver)
 	{
-		if (time_to_die < ft_timestamp() - saver->time_of_last_meal && philos->number_of_meal != n_t_e_p_m_e)
+		pthread_mutex_lock(&philos->die_eat);
+		if (time_to_die < ft_timestamp() - saver->time_of_last_meal
+			&& philos->number_of_meal != n_t_e_p_m_e)
 		{
-//			printf("---\n");
-//			printf("saver->info->time_to_die:%d\n", saver->info->time_to_die);
-//			printf("saver->time_of_last_meal:%d\n", ft_timestamp() - saver->time_of_last_meal);
-//			printf("saver->number_current_philo:%d\n", saver->number_current_philo);
-//			pthread_mutex_lock(&philos->info->print);
-//			pthread_mutex_unlock(&philos->info->print);
 			ft_some_philo_die(saver);
 			return (1);
 		}
-		if (philos->number_of_meal == philos->info->num_times_each_philo_must_eat)
+		if (philos->number_of_meal
+			== philos->info->num_times_each_philo_must_eat)
 		{
-			//printf("===\n");
-			j++;
-			return (1);
+			return (2);
 		}
+		pthread_mutex_unlock(&philos->die_eat);
 		saver = saver->next;
 	}
 	return (0);
@@ -66,4 +60,22 @@ void	ft_sleep(int milliseconds)
 	{
 		usleep(50);
 	}
+}
+
+void	ft_printf(char *str, t_filo_list *philos)
+{
+	pthread_mutex_lock(&philos->info->print);
+	printf(str, ft_timestamp() - philos->info->time,
+		philos->number_current_philo);
+	pthread_mutex_unlock(&philos->info->print);
+}
+
+int	ft_arg_check(int argc)
+{
+	if (argc > 6 || argc < 5)
+	{
+		write(1, "Invalid arguments\n", 18);
+		return (1);
+	}
+	return (0);
 }
