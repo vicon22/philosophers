@@ -6,7 +6,7 @@
 /*   By: eveiled <eveiled@student.21-school.ru>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 20:01:40 by eveiled           #+#    #+#             */
-/*   Updated: 2021/11/22 20:01:40 by eveiled          ###   ########.fr       */
+/*   Updated: 2021/11/22 20:16:11 by eveiled          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,29 @@ t_list	*ft_initialize(int argc, char **argv)
 	return (arg);
 }
 
+static void	logic(t_filo_list *current, t_list *arg, pthread_mutex_t **forks,
+			int i)
+{
+	if (i == 1)
+	{
+		if (arg->number_philo > 1)
+			current->left_forks = forks[i];
+		else
+			current->left_forks = forks[0];
+		current->right_forks = forks[0];
+	}
+	else if (i == arg->number_philo)
+	{
+		current->left_forks = forks[0];
+		current->right_forks = forks[i - 1];
+	}
+	else
+	{
+		current->left_forks = forks[i];
+		current->right_forks = forks[i - 1];
+	}
+}
+
 t_filo_list	*create_philos(t_list *arg, pthread_mutex_t	**forks)
 {
 	t_filo_list		*philos;
@@ -41,24 +64,7 @@ t_filo_list	*create_philos(t_list *arg, pthread_mutex_t	**forks)
 	while (i <= arg->number_philo)
 	{
 		current = ft_lstnew_filo(i, arg);
-		if (i == 1)
-		{
-			if (arg->number_philo > 1)
-				current->left_forks = forks[i];
-			else
-				current->left_forks = forks[0];
-			current->right_forks = forks[0];
-		}
-		else if (i == arg->number_philo)
-		{
-			current->left_forks = forks[0];
-			current->right_forks = forks[i - 1];
-		}
-		else
-		{
-			current->left_forks = forks[i];
-			current->right_forks = forks[i - 1];
-		}
+		logic(current, arg, forks, i);
 		ft_lstadd_back(&philos, current);
 		i++;
 		pthread_mutex_init(&current->die_eat, NULL);
